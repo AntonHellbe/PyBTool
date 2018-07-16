@@ -1,5 +1,4 @@
 from PyQt4.QtCore import *
-from output import Ui_MainWindow
 
 class BTReceiverThread(QThread):
 
