@@ -17,7 +17,7 @@ class BTReceiverThread(QThread):
                 data = str(self.bt_socket.recv(1024))
                 if len(data) == 0:
                     self.__del__()
-                self.emit(SIGNAL("bt_data_received(QString)"), data)
+                self.emit(SIGNAL("sendToTerminal(QString)"), data)
             except IOError as e:
                 print(e)
                 self.__del__()

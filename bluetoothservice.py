@@ -1,13 +1,19 @@
 import bluetooth
+import sys
 from time import sleep
+from BTReceiver import BTReceiverThread
+from PyQt4.QtCore import *
+from PyQt4 import QtGui
 
 
-class PyBluetooth():
+class PyBluetooth(QObject):
 
-    def __init__(self):
+    def __init__(self, ui):
         self.bluetooth = bluetooth
         self.available_devices = {}
         self.bt_socket = None
+        self.ui = ui
+        #self.connect(self.worker_thread, SIGNAL("sendToTerminal(QString)"), self.sendToTerminal)
     
     def set_pack_timeout(self, timeout):
         self.bluetooth.set_packet_timeout = timeout
@@ -16,29 +22,30 @@ class PyBluetooth():
         return self.bluetooth.lookup_name(addr=addr, timeout=timeout)
     
     def discover_devices(self):
-        nearby_devices = bluetooth.discover_devices(duration=2, flush_cache=True, lookup_names=True)
-        print("Found {} available devices".format(len(nearby_devices)))
+        sleep(1)
+        nearby_devices = self.bluetooth.discover_devices(duration=2, flush_cache=True, lookup_names=True)
+        self.sendToTerminal("Found {} available devices".format(len(nearby_devices)))
         for addr, name in nearby_devices:
             self.available_devices[name] = addr
 
         return self.available_devices
 
-    def connect_to_device(self, device_addr):
-        #device_addr = self.available_devices[name]
-        name = "JBL"
-        print("Connecting to device name: {} Address: {}".format(name, device_addr))
-        port = 1 #RFCOMM port?
-        #passkey = "1111" #??????
-        print("Trying to connect...")
+    def connect_to_device(self, name):
+        device_addr = self.available_devices[name]
+        port = 1
         self.bt_socket = self.bluetooth.BluetoothSocket(self.bluetooth.RFCOMM)
         try:
             self.bt_socket.connect((device_addr, port))
-            print("Accepted connection from {}".format(device_addr))
+            self.sendToTerminal("Accepted connection from {}".format(device_addr))
             return self.bt_socket
         except self.bluetooth.btcommon.BluetoothError as e:
-            print(e)
-            return None
-        
-        
+            self.sendToTerminal(str(e))
 
+        return None
+    
+    def sendToTerminal(self, QString):
+        self.ui.appendToTerminal(QString)
 
+    def get_device_addr(self, name):
+        return self.available_devices[name]
+        
